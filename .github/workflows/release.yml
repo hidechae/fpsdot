@@ -1,0 +1,81 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag name to release (e.g. v0.1.0). Must already exist or will be created at the current commit.'
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  build-windows:
+    name: Build Windows exe
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt pyinstaller
+
+      - name: Build with PyInstaller
+        run: pyinstaller --noconsole --onefile --name fpsdot --paths src src/main.py
+
+      - name: Smoke test (launch & verify process stays up)
+        shell: pwsh
+        run: |
+          $proc = Start-Process -FilePath "dist/fpsdot.exe" -PassThru -WindowStyle Hidden
+          Start-Sleep -Seconds 3
+          if ($proc.HasExited) {
+            Write-Error "fpsdot.exe exited immediately (code $($proc.ExitCode))"
+            exit 1
+          }
+          Stop-Process -Id $proc.Id -Force
+          Write-Host "OK — exe stayed running for 3s."
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: fpsdot-windows-x64
+          path: dist/fpsdot.exe
+          if-no-files-found: error
+
+      - name: Resolve release tag
+        id: tag
+        shell: pwsh
+        run: |
+          $tag = if ($env:GITHUB_REF -like "refs/tags/*") {
+            $env:GITHUB_REF -replace "^refs/tags/", ""
+          } else {
+            "${{ inputs.tag }}"
+          }
+          if (-not $tag) { Write-Error "No tag resolved"; exit 1 }
+          "tag=$tag" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+          Write-Host "Release tag: $tag"
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.tag.outputs.tag }}
+          name: ${{ steps.tag.outputs.tag }}
+          files: dist/fpsdot.exe
+          generate_release_notes: true
+          draft: false
+          prerelease: false
+          fail_on_unmatched_files: true

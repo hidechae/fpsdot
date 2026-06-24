@@ -24,6 +24,12 @@ Modeled after the standard feature set of HudSight / CrossOver / Custom-Crosshai
 
 ## Setup
 
+### Option A — Download the prebuilt exe (recommended)
+
+Grab `fpsdot.exe` from the [latest release](https://github.com/hidechae/fpsdot/releases/latest) and double-click it. No Python, no setup. Single ~46 MB self-contained Windows executable.
+
+### Option B — Run from source
+
 Requires Windows 10/11 and Python 3.10+.
 
 ```bat
@@ -99,15 +105,26 @@ That said:
 
 ---
 
-## Building a single-file EXE (optional)
+## Building a single-file EXE
+
+For local builds, after `run.bat` has set up `.venv`:
 
 ```bat
-.venv\Scripts\activate
-pip install pyinstaller
-pyinstaller --noconsole --onefile --name fpsdot src\main.py
+build.bat
 ```
 
-The binary will be at `dist\fpsdot.exe`.
+Output: `dist\fpsdot.exe` (single self-contained ~46 MB binary).
+
+### Cutting a release
+
+Pushing a `v*` tag triggers `.github/workflows/release.yml`, which builds the exe on a fresh `windows-latest` runner, smoke-tests it, and publishes a GitHub Release with the exe attached:
+
+```bash
+git tag v0.1.0
+git push origin v0.1.0
+```
+
+Watch progress under the [Actions tab](https://github.com/hidechae/fpsdot/actions). The release appears at `Releases` once the workflow completes (~2–3 minutes).
 
 ---
 
