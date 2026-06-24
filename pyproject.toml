@@ -1,0 +1,20 @@
+[project]
+name = "fpsdot"
+version = "0.1.0"
+description = "Transparent crosshair overlay for FPS games (Fortnite, Apex, ...)."
+requires-python = ">=3.10"
+dependencies = [
+    "PySide6>=6.6.0",
+    "pywin32>=306; platform_system == 'Windows'",
+    "psutil>=5.9.0",
+]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
