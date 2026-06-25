@@ -1,5 +1,8 @@
 # fpsdot
 
+[![CI](https://github.com/hidechae/fpsdot/actions/workflows/ci.yml/badge.svg)](https://github.com/hidechae/fpsdot/actions/workflows/ci.yml)
+[![Release](https://github.com/hidechae/fpsdot/actions/workflows/release.yml/badge.svg)](https://github.com/hidechae/fpsdot/actions/workflows/release.yml)
+
 A transparent crosshair overlay for FPS games (Fortnite, Apex Legends, etc.) on Windows. Draws a small dot or crosshair on top of the screen so you can clearly see the exact center of your viewport.
 
 The overlay is a separate top-level window — **no DLL injection, no DirectX/OpenGL hooking, no interaction with the game process whatsoever**. It uses the same Windows layered-window mechanism as OBS or Discord overlays.
@@ -148,3 +151,25 @@ fpsdot/
 ```
 
 User config is stored at `%USERPROFILE%\.fpsdot\config.json`.
+
+---
+
+## Development
+
+### Running the tests
+
+```bat
+.venv\Scripts\activate
+pip install pytest
+set QT_QPA_PLATFORM=offscreen
+pytest -v
+```
+
+The same suite runs in CI ([`.github/workflows/ci.yml`](.github/workflows/ci.yml)) on Windows against Python 3.10 and 3.12 on every push to `main` and on pull requests. `QT_QPA_PLATFORM=offscreen` lets Qt run headlessly so painting tests work in CI.
+
+Tests cover:
+
+- `config.py` — JSON round-trip, default values, validation clamping, every built-in preset
+- `crosshair.py` — every shape renders, color/alpha are respected, hollow vs. filled centers
+- `hotkeys.py` — hotkey spec parsing (valid + invalid inputs)
+- `window_focus.py` — target-process matching (case-insensitive, path basename, permissive on unknown)
